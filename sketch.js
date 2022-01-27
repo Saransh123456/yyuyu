@@ -1,166 +1,142 @@
-var path,boy,cash,diamonds,jwellery,sword;
-var pathImg,boyImg,cashImg,diamondsImg,jwelleryImg,swordImg;
-var treasureCollection = 0;
-var cashG,diamondsG,jwelleryG,swordGroup;
-
-//Game States
-var PLAY=1;
-var END=0;
-var gameState=1;
+var towerImg, tower;
+var doorImg, door, doorsGroup;
+var climberImg, climber, climbersGroup;
+var ghost, ghostImg,ghostImg2;
+var invisibleBlockGroup, invisibleBlock;
+var gameOver,gameOverImg;
+var gameState = "play"
 
 function preload(){
-  pathImg = loadImage("Road.png");
-  boyImg = loadAnimation("Runner-1.png","Runner-2.png");
-  cashImg = loadImage("cash.png");
-  diamondsImg = loadImage("diamonds.png");
-  jwelleryImg = loadImage("jwell.png");
-  swordImg = loadImage("sword.png");
-  endImg =loadAnimation("gameOver.png");
+  towerImg = loadImage("tower.png");
+  doorImg = loadImage("door.png");
+  climberImg = loadImage("climber.png");
+  ghostImg = loadImage("ghost-standing.png");
+  ghostImg2 = loadImage("ghost-jumping.png");
+  spookySound = loadSound("spooky.wav");
+  gameOverImg = loadImage("game-over.jpg");
 }
 
-function setup(){
+function setup() {
+  createCanvas(600, 600);
+  tower = createSprite(300,300);
+  tower.addImage("tower",towerImg);
+  tower.velocityY = 1;
+ 
+  doorsGroup=new Group();
+  climbersGroup=new Group();
+  invisibleBlockGroup=new Group();
   
-//create a canvas
+  ghost=createSprite(200,150);
+  ghost.addImage("ghost",ghostImg);
+  ghost.scale=0.5;
+  ghost.debug=false;
+  ghost.setCollider("circle",0,0,130);
 
-// createCanvas(window,window);
- createCanvas(windowWidth,windowHeight);
-// createCanvas(width,height);
-// createCanvas(200,200);
-
-// Moving background
-
-path=createSprite(width/2,200);
-path.addImage(pathImg);
-path.velocityY = 4;
-
-
-//creating boy running
-boy = createSprite(width/2,height-20,20,20);
-boy.addAnimation("SahilRunning",boyImg);
-boy.scale=0.08;
-  
-  
-cashG=new Group();
-diamondsG=new Group();
-jwelleryG=new Group();
-swordGroup=new Group();
+  gameOver=createSprite(300,300);
+  gameOver.visible=false;   
 
 }
 
 function draw() {
-
-  if(gameState===PLAY){
-  background(0);
-  boy.x = World.mouseX;
+  background(200);
   
-  edges= createEdgeSprites();
-  boy.collide(edges);
-  
-  //code to reset the background
-
-  // if(path.x > height ){
-  //   path.x = height/2;
-  // }
-
-  // if(path.y > height ){
-  //   path.x = height/2;
-  // }
-
-  // if(path.x > height ){
-  //   path.y = height;
-  // }
-
-   if(path.y > height ){
-     path.y = height/2;
-   }
-  
-    createCash();
-    createDiamonds();
-    createJwellery();
-    createSword();
-
-    if (cashG.isTouching(boy)) {
-      cashG.destroyEach();
-      treasureCollection=treasureCollection + 50;
+  if(tower.y > 400){
+      tower.y = 300
     }
-    else if (diamondsG.isTouching(boy)) {
-      diamondsG.destroyEach();
-      treasureCollection=treasureCollection + 100;
-      
-    }else if(jwelleryG.isTouching(boy)) {
-      jwelleryG.destroyEach();
-      treasureCollection= treasureCollection + 150;
-      
-    }else{
-      if(swordGroup.isTouching(boy)) {
-        gameState=END;
-        
-        boy.addAnimation("SahilRunning",endImg);
-        boy.x=width/2;
-        boy.y=height/2;
-        boy.scale=0.6;
-        
-        cashG.destroyEach();
-        diamondsG.destroyEach();
-        jwelleryG.destroyEach();
-        swordGroup.destroyEach();
-        
-        cashG.setVelocityYEach(0);
-        diamondsG.setVelocityYEach(0);
-        jwelleryG.setVelocityYEach(0);
-        swordGroup.setVelocityYEach(0);
+    spawnDoor();
+    drawSprites();
+    createEdgeSprites();
+
+    if(keyDown("space"))
+    {
+      ghost.velocityY=-4;
+    }
+
+    if(keyDown("left_arrow"))
+    {
+      ghost.x=ghost.x-4;
+    }
+
+    if(keyDown("right_arrow"))
+    {
+      ghost.x=ghost.x+4;
+    }
+
+    ghost.velocityY=ghost.velocityY+0.8;
      
+
+    if(climbersGroup.isTouching(ghost))
+    {
+      ghost.velocityY=0;
     }
-  }
-  
-  drawSprites();
-  textSize(20);
-  fill(255);
-  text("Treasure: "+ treasureCollection,width-150,30);
-  }
 
-}
+    if(ghost.isTouching(invisibleBlockGroup))
+    {
+      ghost.destroy();
+      gameOver.addImage("gameover",gameOverImg);
+      gameOver.visible=true;
+      doorsGroup.destroyEach();
+      climbersGroup.destroyEach();
+    }  
 
-function createCash() {
-  if (World.frameCount % 200 == 0) {
-  var cash = createSprite(Math.round(random(50, width-50),40, 10, 10));
-  cash.addImage(cashImg);
-  cash.scale=0.12;
-  cash.velocityY = 5;
-  cash.lifetime = 200;
-  cashG.add(cash);
-  }
-}
+    if(ghost.y>550)
+    {
+      ghost.destroy();
+      gameOver.addImage("gameover",gameOverImg);
+      gameOver.visible=true;
+      doorsGroup.destroyEach();
+      climbersGroup.destroyEach();
+    }
 
-function createDiamonds() {
-  if (World.frameCount % 320 == 0) {
-  var diamonds = createSprite(Math.round(random(50, width-50),40, 10, 10));
-  diamonds.addImage(diamondsImg);
-  diamonds.scale=0.03;
-  diamonds.velocityY = 5;
-  diamonds.lifetime = 200;
-  diamondsG.add(diamonds);
-}
+    
 }
 
-function createJwellery() {
-  if (World.frameCount % 410 == 0) {
-  var jwellery = createSprite(Math.round(random(50, width-50),40, 10, 10));
-  jwellery.addImage(jwelleryImg);
-  jwellery.scale=0.13;
-  jwellery.velocityY = 5;
-  jwellery.lifetime = 200;
-  jwelleryG.add(jwellery);
-  }
+function spawnDoor()
+{
+if (frameCount % 240===0)
+{
+  door=createSprite(200,50);
+  door.addImage("door",doorImg);
+ // door.scale=0.5;
+  door.velocityY=1;
+  door.lifetime=600;
+  doorsGroup.add(door);
+  door.x=Math.round(random(120,400));
+
+  climber=createSprite(200,100);
+  climber.addImage("climber",climberImg);
+  //climber.scale=0.5;
+  climber.velocityY=1;
+  climber.lifetime=600;
+  climbersGroup.add(climber);
+  climber.x=door.x;
+
+  invisibleBlock=createSprite(200,120);
+  invisibleBlock.velocityY=1;
+  invisibleBlock.x=door.x;
+  invisibleBlock.lifetime=600;
+  invisibleBlock.width=climber.width; 
+  invisibleBlock.height=2;
+  invisibleBlockGroup.add(invisibleBlock); 
+  invisibleBlock.visible=false;
+
+  door.depth=ghost.depth;
+  ghost.depth+=1;
+
+}
 }
 
-function createSword(){
-  if (World.frameCount % 530 == 0) {
-  var sword = createSprite(Math.round(random(50, width-50),40, 10, 10));
-  sword.addImage(swordImg);
-  sword.scale=0.1;
-  sword.velocityY = 4;
-  sword.lifetime = 200;
-  swordGroup.add(sword);
-  }
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
